@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 import joblib
 
 class CreditCardFraudDetection:
+    
     def __init__(self, file_path):
         self.data = pd.read_csv(file_path)
         self.encoder = LabelEncoder()
@@ -36,17 +37,20 @@ class CreditCardFraudDetection:
 
     def create_correlation_matrix(self):
         plt.figure(figsize=(15, 10), dpi=150)
-        sns.heatmap(self.data.corr(), vmin=0, vmax=1, cmap="viridis")
+        sns.heatmap(self.data.corr(numeric_only=True), vmin=0, vmax=1, cmap="viridis")
 
     def encode_categorical_features(self):
         categorical_features = self.data.select_dtypes(include=['object']).columns
         self.data[categorical_features] = self.data[categorical_features].apply(self.encoder.fit_transform)
 
     def train_model(self):
+        global X_test 
+        global y_test
         data_encoded, labels = self.data.drop("is_fraud", axis=1), self.data["is_fraud"]
         X_train, X_test, y_train, y_test = train_test_split(data_encoded, labels, test_size=0.1, random_state=42)
         self.classifier.fit(X_train, y_train)
         joblib.dump(self.classifier, "../models")
+
 
     def evaluate_model(self):
         preds = self.classifier.predict(X_test)
