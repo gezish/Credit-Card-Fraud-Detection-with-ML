@@ -1,34 +1,73 @@
-# Copyright 2018-2022 Streamlit Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+from io import StringIO
 import streamlit as st
-from streamlit.logger import get_logger
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
-LOGGER = get_logger(__name__)
+# Load your dataset
+@st.cache_data
+def load_data():
+    # Load your dataset
+    data = pd.read_csv('dataset/credit_card.csv')
+    return data
 
+# Train your RandomForestClassifier model
+@st.cache_data
+def train_model(data):
+    # Define features and target
+    X = data.drop(columns=['target_column'])
+    y = data['target_column']
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
-    )
+    # Split data into train and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    st.write("# Welcome to Streamlit! 👋")
+    # Train RandomForestClassifier model
+    model = RandomForestClassifier()
+    model.fit(X_train, y_train)
 
-    st.sidebar.success("Select a demo above.")
+    return model, X_test, y_test
 
+# Streamlit app
+def main():
+    st.title('Credit Card Fraud Detection using ML Model')
 
+    # Load data
+    data_load_state = st.text('Loading data...')
+    data = load_data()
+    data_load_state.text('Loading data... done!')
+    
+    # Display basic info about the loaded data
+    st.subheader('Basic Info of Loaded Data')
+    st.write("Number of rows & columns:", data.shape)   
+    st.subheader('Data Info')
+    buffer = StringIO()
+    data.info(buf=buffer)
+    s = buffer.getvalue()
+    st.text(s)  
 
-if __name__ == "__main__":
-    run()
+# Example of sidebar usage
+    """st.sidebar.header("Descriptive statistics of a DF")
+    st.sidebar.slider("Slider", 0, 100, 50)"""
+
+    st.write(data.describe())
+
+    # Train model
+    model_train_state = st.text('Training model...')
+    model, X_test, y_test = train_model(data)
+    model_train_state.text('Training model... done!')
+
+    # Display dataset
+    st.subheader('Dataset')
+    st.write(data)
+
+    # Display model evaluation
+    st.subheader('Model Evaluation')
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    st.write('Accuracy:', accuracy)
+
+    # Add more features as needed
+
+if __name__ == '__main__':
+    main()
