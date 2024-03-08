@@ -1,9 +1,14 @@
 import streamlit as st
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from io import StringIO
+st.set_option('deprecation.showPyplotGlobalUse', False)
+
 
 # Load your dataset
 @st.cache_data
@@ -50,8 +55,15 @@ def train_model(data):
 # Streamlit app
 def main(data = load_data()):
     st.sidebar.title('Navigation')
-    selected_section = st.sidebar.radio('Go to', ['Home', 'Basic Data Information','Check Average Values Spend Per Fraud','Total Fraud and Non-fraud Spend on a Specific Credit Card',
-                                                  'Cleaned Data Columns for further analysis','Model Evaluation'])
+    selected_section = st.sidebar.radio('Go to', ['Home', 'Basic Data Information',
+                                                  'Check Average Values Spend Per Fraud',
+                                                  'Total Fraud and Non-fraud Spend on a Specific Credit Card',
+                                                  'Cleaned Data Columns for further analysis',
+                                                  'Visual Correlation Matrix of Data Features',
+                                                  'Encode Categorical Data Features',
+                                                  'Perform a Train-Test Split',
+                                                  'Train a Random Forest Classifier Model',
+                                                  'Evaluate the Model on the Test Set'])
 
     if selected_section == 'Home':
         st.title('Classification of Credit Card Fraud with Machine Learning')
@@ -95,8 +107,16 @@ def main(data = load_data()):
         st.write('\n')
         st.markdown("**Filter and calculate on fraud purchases:**")
         st.write(data[(data["cc_num"] == 344709867813900) & (data["is_fraud"] == 1)]["amt"].sum())  
-         
-          
+        
+    elif selected_section == 'Visual Correlation Matrix of Data Features':
+        data = load_data()
+       # st.write(data.describe())
+        st.title("Correlation Matrix of Data Features:")
+        plt.figure(figsize=(15,10),dpi=150)
+        sns.heatmap(data.corr(numeric_only=True), vmin=0,vmax=1,cmap="viridis")
+        st.pyplot()
+        
+        
     elif selected_section == 'Cleaned Data Columns for further analysis':
         clean_d = clean()
        # st.write(data.describe())
@@ -106,14 +126,44 @@ def main(data = load_data()):
         st.markdown("* Category 1: 00:00:00 to 05:59:59")
         st.markdown("* Category 2: 06:00:00 to 11:59:59")
         st.markdown("* Category 3: 12:00:00 to 17:59:59")
-        st.markdown("* Category 4: 8:00:00 to 23:59:59")
-        #st.write(data["trans_date_trans_time"] = data["trans_date_trans_time"].apply(lambda x: x.split(" ")[1]))
-        
-        #st.write(data["trans_date_trans_time"] = data["trans_date_trans_time"].apply(quantitize))       
+        st.markdown("* Category 4: 8:00:00 to 23:59:59")      
         st.markdown("**Final results**")  
-        st.write(clean_d["trans_date_trans_time"].value_counts())  
-          
-    elif selected_section == 'Model Evaluation':
+        st.write(clean_d["trans_date_trans_time"].value_counts())
+    
+    elif selected_section == 'Encode Categorical Data Features':
+        data = load_data()
+        global data_encoded
+        global labels 
+        st.title(" Correlation Matrix of Data Features:")
+        st.write("* Using the Pandas DataFrame and Scikit-Learn, we use Label Encoding to encode the categorical features in the DataFrame.")
+        encoder = LabelEncoder()
+        categorical_features = data.select_dtypes(include=['object']).columns
+        ### Apply fit_transform to create the encoded category data columns
+        data_encoded = data.copy()
+        data_encoded[categorical_features] = data_encoded[categorical_features].apply(encoder.fit_transform) 
+        
+        st.write(data_encoded)      
+        
+    elif selected_section == 'Perform a Train-Test Split':
+        data = load_data()
+        
+        st.title("Train-Test(10% ) split with :")
+        data_encoded, labels = data_encoded.drop("is_fraud", axis=1), data_encoded["is_fraud"]
+        X_train, X_test, y_train, y_test = train_test_split(data_encoded, labels, test_size = 0.1, random_state = 42)
+        st.write("X_train:", X_train.shape) 
+        st.write("X_test:", X_test.shape)
+        st.write("y_train:", y_train.shape)
+        st.write("y_test:", y_test.shape)
+           
+        
+    elif selected_section == 'Train a Random Forest Classifier Model':
+        data = load_data()
+       # st.write(data.describe())
+        st.title("Correlation Matrix of Data Features:")
+        plt.figure(figsize=(15,10),dpi=150)
+        sns.heatmap(data.corr(numeric_only=True), vmin=0,vmax=1,cmap="viridis")
+        st.pyplot()      
+    elif selected_section == 'Evaluate the Model on the Test Set':
         st.title('Model Evaluation')
         data = load_data()
         model, X_test, y_test = train_model(data)
