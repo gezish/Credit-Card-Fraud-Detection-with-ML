@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import accuracy_score, confusion_matrix
 from io import StringIO
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
@@ -54,16 +55,15 @@ def train_model(data):
 
 # Streamlit app
 def main(data = load_data()):
+    
     st.sidebar.title('Navigation')
     selected_section = st.sidebar.radio('Go to', ['Home', 'Basic Data Information',
                                                   'Check Average Values Spend Per Fraud',
                                                   'Total Fraud and Non-fraud Spend on a Specific Credit Card',
                                                   'Cleaned Data Columns for further analysis',
                                                   'Visual Correlation Matrix of Data Features',
-                                                  'Encode Categorical Data Features',
-                                                  'Perform a Train-Test Split',
-                                                  'Train a Random Forest Classifier Model',
-                                                  'Evaluate the Model on the Test Set'])
+                                                  'Train, test & Evaluate'
+                                                  ])
 
     if selected_section == 'Home':
         st.title('Classification of Credit Card Fraud with Machine Learning')
@@ -130,24 +130,20 @@ def main(data = load_data()):
         st.markdown("**Final results**")  
         st.write(clean_d["trans_date_trans_time"].value_counts())
     
-    elif selected_section == 'Encode Categorical Data Features':
+    elif selected_section == 'Train, test & Evaluate':
         data = load_data()
-        global data_encoded
-        global labels 
-        st.title(" Correlation Matrix of Data Features:")
+        data = data.drop(["unix_time", "trans_num"], axis=1)
+        st.title("Train-Test Split, Train, test & Evaluate The Model")
+        st.markdown("## 1. Features Encoding ")
         st.write("* Using the Pandas DataFrame and Scikit-Learn, we use Label Encoding to encode the categorical features in the DataFrame.")
         encoder = LabelEncoder()
         categorical_features = data.select_dtypes(include=['object']).columns
         ### Apply fit_transform to create the encoded category data columns
         data_encoded = data.copy()
-        data_encoded[categorical_features] = data_encoded[categorical_features].apply(encoder.fit_transform) 
+        data_encoded[categorical_features] = data_encoded[categorical_features].apply(encoder.fit_transform)
+        st.write(data_encoded.shape)
         
-        st.write(data_encoded)      
-        
-    elif selected_section == 'Perform a Train-Test Split':
-        data = load_data()
-        
-        st.title("Train-Test(10% ) split with :")
+        st.markdown("## 2. Train-Test(10% ) spliting Result:**")
         data_encoded, labels = data_encoded.drop("is_fraud", axis=1), data_encoded["is_fraud"]
         X_train, X_test, y_train, y_test = train_test_split(data_encoded, labels, test_size = 0.1, random_state = 42)
         st.write("X_train:", X_train.shape) 
@@ -155,21 +151,19 @@ def main(data = load_data()):
         st.write("y_train:", y_train.shape)
         st.write("y_test:", y_test.shape)
            
+        st.markdown("## 3. Train With Random Forest Classifier Model:")
+        st.write("Random Forest Classifier training result:")
+        st.write(" -Using Scikit-Learn create and train a random forest classifier on the training data set")
+        classifier = RandomForestClassifier(class_weight='balanced')
+        st.write(classifier.fit(X_train, y_train))              
         
-    elif selected_section == 'Train a Random Forest Classifier Model':
-        data = load_data()
-       # st.write(data.describe())
-        st.title("Correlation Matrix of Data Features:")
-        plt.figure(figsize=(15,10),dpi=150)
-        sns.heatmap(data.corr(numeric_only=True), vmin=0,vmax=1,cmap="viridis")
-        st.pyplot()      
-    elif selected_section == 'Evaluate the Model on the Test Set':
-        st.title('Model Evaluation')
-        data = load_data()
-        model, X_test, y_test = train_model(data)
-        y_pred = model.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
-        st.write('Accuracy:', accuracy)
+        st.markdown("## 4. Model Evaluation Result:")
+        #st.title('Model Evaluation')
+        preds = classifier.predict(X_test)
+        ## Calculate the accuracy
+        st.write("Accuracy Score of the Model:", accuracy_score(preds, y_test))
+        
+        st.write("Confusion matrix result:", confusion_matrix(y_test, preds))
 
 if __name__ == '__main__':
     main()
