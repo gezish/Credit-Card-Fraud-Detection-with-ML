@@ -61,7 +61,7 @@ def main():
          Your boss wants you to build a classifier that can accurately identify fraudulent transactions.
     ''')
     elif selected_section == 'Load Data':
-        st.header('Data Loading and Overview:')
+        st.header('**Data Loading and Overview:**')
         data = load_data()
         st.markdown('#### Data Info')
         buffer = StringIO()
@@ -69,12 +69,13 @@ def main():
         s = buffer.getvalue()
         st.text(s)
         st.write(data)
-        st.markdown('#### Descriptive statistics info')
+        st.markdown('#### Descriptive statistics info:')
         st.write(data.describe())
         
     elif selected_section == 'Average Values Spend Per Fraud':
         data = load_data()
-        st.markdown('#### Check Average Values Spend Per Fraud')
+        st.markdown('#### Average Values Spend Per Fraud')
+        #st.markdown('#### Check Average Values Spend Per Fraud')
         st.write('1. We can use groupby() to separate based on the is_fraud column categories and then calculate the mean and median values:')
         st.markdown("**Median Spend per Fraud Category:**")
         st.write(data.groupby("is_fraud")["amt"].median())
@@ -84,7 +85,7 @@ def main():
         
     elif selected_section == 'Total Fraud and Non-fraud Spend':
         data = load_data()
-        st.markdown('#### Calculate Total Fraud and Non-fraud Spend on a Specific Credit Card')
+        st.markdown('#### Calculate Total Fraud and Non-fraud Spend on a Specific Credit Card:')
         st.markdown('**Sum of legitimate purchases:**')
         
         st.write(data[(data["cc_num"] == 344709867813900) & (data["is_fraud"] == 0)]["amt"].sum())
